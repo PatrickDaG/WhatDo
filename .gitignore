@@ -1,0 +1,4 @@
+build
+cmake/
+!cmake/FindCompilerFlags.cmake
+
