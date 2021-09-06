@@ -1,4 +1,5 @@
 build
 cmake/
 !cmake/FindCompilerFlags.cmake
+.cache
 

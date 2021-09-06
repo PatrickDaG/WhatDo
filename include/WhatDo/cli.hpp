@@ -10,7 +10,7 @@ namespace cli {
 
 class cli {
 private:
-	std::unordered_map<choosable, std::vector<nlohmann::json>> items;
+	std::unordered_map<util::choosable, std::vector<nlohmann::json>> items;
 
 public:
 	nlohmann::json* choose_all();

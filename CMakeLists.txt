@@ -38,7 +38,7 @@ CPMAddPackage(
 CPMAddPackage(
   NAME fmt
   GITHUB_REPOSITORY fmtlib/fmt
-  GIT_TAG 7.1.3
+  GIT_TAG 8.0.1
 )
 
 CPMAddPackage(

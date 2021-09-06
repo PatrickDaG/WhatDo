@@ -1,4 +1,4 @@
-#include <WhatDo/cli.hpp>
+#include WhatDo/cli.hpp>
 
 int main() {
 	return cli::start();

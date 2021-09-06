@@ -14,7 +14,7 @@
 
 namespace util {
 
-namespace steam {
+namespace steamutils {
 
 struct steam_game_compare {
 	bool operator()(const nlohmann::json& l, const nlohmann::json& r) const {
@@ -38,8 +38,10 @@ std::optional<nlohmann::json> fetch_steam_games() {
 int update_steam_games() {
 	auto web_opt = fetch_steam_games();
 
-	if(not web_opt)
+	if(not web_opt) {
+		fmt::print("Error fetching steam games");
 		return 0;
+	}
 	auto web = web_opt.value();
 
 	nlohmann::json local;
@@ -60,9 +62,9 @@ int update_steam_games() {
 
 std::string get_steam_store_link(int app_id) { return fmt::format("https://store.steampowered.com/app/{}", app_id); }
 
-}  // namespace steam
+}  // namespace steamutils
 
-std::vector<nlohmann::json> get_games(const choosable& art) {
+std::vector<nlohmann::json> get_games(const choosable art) {
 	nlohmann::json j;
 	std::string filename = fmt::format("./data/games/{}.json", magic_enum::enum_name(art));
 	std::ifstream in(filename, std::ios::in);
@@ -70,7 +72,7 @@ std::vector<nlohmann::json> get_games(const choosable& art) {
 	return j.at("games").get<std::vector<nlohmann::json>>();
 }
 
-void save_games(const choosable& e, const std::vector<nlohmann::json>& s) {
+void save_games(const choosable e, const std::vector<nlohmann::json>& s) {
 	nlohmann::json j{{"game_count", s.size()}, {"games", s}};
 	auto filename = fmt::format("./data/games/{}.json", magic_enum::enum_name(e));
 	std::ofstream out(filename, std::ios::out);
@@ -87,6 +89,7 @@ int get_rand_num(const int min, const int max) {
 nlohmann::json* choose(const std::vector<nlohmann::json*>& choose) {
 	const int count = choose.size();
 	int rand = get_rand_num(0, count - 1);
-	auto game = choose[rand];
+	return choose[rand];
 }
+
 }  // namespace util
