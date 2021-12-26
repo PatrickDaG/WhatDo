@@ -12,7 +12,7 @@ def build_request(url: str, location: str, options: dict) -> str:
         req += key + "=" + value + "&"
     return req[0:-1]
 
-def get_random(choices):
+def choose_random(choices):
             return random.choice([c for c in choices if
                 not c.get("exclude", False)])
 
