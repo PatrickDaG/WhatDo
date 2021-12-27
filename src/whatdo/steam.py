@@ -52,8 +52,10 @@ def games() -> dict:
         return cache
     try:
         cache = offline_games()
-        # add another except if file is unparsable
+        return cache
     except FileNotFoundError:
         print("No local file found, downloading from api", file=stderr)
-        cache = online_games()
+    except json.decoder.JSONDecodeError:
+        print("error parsing json, downloading from api", file = stderr)
+    cache = online_games()
     return cache

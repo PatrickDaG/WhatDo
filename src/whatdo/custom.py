@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from dataclasses import dataclass
+import uuid
 
-from whatdo.utils import load_games
+from whatdo.util import load_games
 
 cache = None
 file = "custom.json"
@@ -18,8 +18,11 @@ def games() -> dict:
         cache = {}
     return cache
 
-@dataclass
-class custom_entry:
-    appid: int
-    name: str
-    
+
+def add_custom():
+    erg = {}
+    erg["name"] = input("Please enter a name:")
+    erg["img_icon_url"] = input("You may enter a icon url for display purpose:")
+    erg["img_logo_url"] = input("Additionally you can enter a logo url:")
+    erg["appid"]= str(uuid.uuid4())
+    games()[erg["appid"]] = erg
