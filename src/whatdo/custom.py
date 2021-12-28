@@ -2,7 +2,7 @@
 
 import uuid
 
-from whatdo.util import load_games
+from whatdo.util import load_games, save_games
 
 cache = None
 file = "custom.json"
@@ -18,6 +18,11 @@ def games() -> dict:
         cache = {}
     return cache
 
+
+def save():
+    if cache is None:
+        return
+    save_games(cache, file)
 
 def add_custom():
     erg = {}

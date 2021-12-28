@@ -27,8 +27,10 @@ def load_games(filename: str) -> dict:
     with open(data_folder + filename, "r") as f:
         return json.load(f)
 
-from howlongtobeatpy import HowLongToBeat
+from howlongtobeatpy import HowLongToBeat, HowLongToBeatEntry
 
-def playtime(game_name: str):
+def playtime(game_name: str) -> HowLongToBeatEntry:
     res = HowLongToBeat().search(game_name)
+    if res is None or len(res) == 0:
+        return None
     return(max(res, key=lambda element: element.similarity))

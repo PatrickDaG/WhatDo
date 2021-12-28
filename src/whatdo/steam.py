@@ -5,7 +5,7 @@ import json
 
 from sys import stderr
 
-from whatdo.util import build_request, load_games
+from whatdo.util import build_request, load_games, save_games
 
 cache = None
 file = "steam.json"
@@ -21,7 +21,7 @@ def sync_games() -> bool:
     offline = games()
     if online is None:
         return False
-    for k,v in online_games.items():
+    for k,v in online_games().items():
         o = offline.get(k)
         if o is not None:
             v["exclude"] = o.get("exclude", False)
@@ -45,6 +45,11 @@ def online_games() -> dict:
 
 def offline_games() -> dict:
     return load_games(file)
+
+def save():
+    if cache is None:
+        return
+    save_games(cache, file)
 
 def games() -> dict:
     global cache

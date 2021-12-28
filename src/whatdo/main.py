@@ -1,34 +1,49 @@
 #!/usr/bin/env python3
 
+from sys import stderr
+
 from whatdo import util, steam, custom
 from whatdo.util import col
 
-def all_games() -> dict:
+all_games = [steam, custom]
+
+current_games_choice = all_games
+
+def current_games() -> dict:
     erg = {}
-    erg.update(steam.games())
-    erg.update(custom.games())
+    for i in current_games_choice:
+        erg.update(i.games())
     return erg
+
+def print_gametime(name: str):
+    try:
+        time = util.playtime(name)
+        if time is None:
+            print("No corresponding game found!", file = stderr)
+            return
+        print("Playtime: " + col("\x1b[35m") + time.gameplay_main + col("\x1b[m") +
+            " " + time.gameplay_main_unit + " for Game: "
+            + col("\x1b[33m")+ time.game_name + col("\x1b[m"))
+    except TypeError:
+        print("No Gametime found", file = stderr)
+
 
 def main():
     while True:
-        cur = util.choose_random(list(all_games().values()))
+        cur = util.choose_random(list(current_games().values()))
         print("Current Game is: " + col("\x1b[34m") + cur["name"] + col("\x1b[m"))
-        print("(" + col("\x1b[32m") + "r" + col("\x1b[m") + ") to reroll," +
-            "(" + col("\x1b[33m") + "e" + col("\x1b[m") + ") to exclude," +
-            "(" + col("\x1b[31m") + "q" + col("\x1b[m") + ") to quit," +
-            "(" + col("\x1b[35m") + "s" + col("\x1b[m") + ") to sync games with online"
+        print("(" + col("\x1b[32m") + "r" + col("\x1b[m") + ") to reroll, " +
+            "(" + col("\x1b[33m") + "e" + col("\x1b[m") + ") to exclude, " +
+            "(" + col("\x1b[31m") + "q" + col("\x1b[m") + ") to quit, " +
+            "(" + col("\x1b[35m") + "s" + col("\x1b[m") + ") to sync games with online, "
             "(" + col("\x1b[35m") + "a" + col("\x1b[m") + ") to add custom games")
-        # should fix this
-        # print actual name to see if its even right game and enabel failsafe if not in howlongtobeat
-        time = util.playtime(cur["name"])
-        print("Playtime: " + col("\x1b[35m") + time.gameplay_main + col("\x1b[m") +
-             " " + time.gameplay_main_unit)
+        print_gametime(cur["name"])
         inp = input(">")
         if inp == "e":
             cur["exclude"] = True
         elif inp == "q":
-            util.save_games(steam.games(), steam.file)
-            util.save_games(custom.games(), custom.file)
+            for i in all_games:
+                i.save()
             exit(0)
         elif inp == "s":
             if steam.sync_games():
