@@ -17,7 +17,8 @@ def current_games() -> dict:
 
 def list_current():
     for i in current_games().values():
-        print(i["type"] + ": " + i["name"])
+        if not i.get("exclude", False)
+            print(i["type"] + ": " + i["name"])
 
 
 def print_gametime(name: str):
