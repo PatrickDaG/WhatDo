@@ -8,7 +8,8 @@ from sys import stderr
 from whatdo.util import build_request, load_games, save_games
 
 cache = None
-file = "steam.json"
+name = "steam"
+file = name + ".json"
 key_file = ".api_key"
 
 def api_key(filename: str) -> str:
@@ -40,7 +41,7 @@ def online_games() -> dict:
     arr = json.loads(requests.get(req).text)["response"]["games"]
     erg = {}
     for j in arr:
-        j["type"] = "steam"
+        j["type"] = name
         erg[str(j["appid"])] = j
     return erg
 

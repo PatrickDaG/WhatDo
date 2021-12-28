@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import uuid
+from sys import stderr
 
 from whatdo.util import load_games, save_games, col
 
@@ -14,7 +15,7 @@ def games() -> dict:
     try:
         cache = load_games(file)
     except FileNotFoundError:
-        print("No custom games exist yet, start by adding some")
+        print("No custom games exist yet, start by adding some", file = stderr)
         cache = {}
     return cache
 
@@ -30,6 +31,7 @@ def add_custom():
     erg["type"] = "custom"
     erg["img_icon_url"] = input("You may enter a icon url for display purpose:")
     erg["img_logo_url"] = input("Additionally you can enter a logo url:")
+    # Check if such a game already exists
     for i in games().values():
         if i["name"] == erg["name"]:
             print("There seems to already exist a game with that name!")
@@ -45,5 +47,6 @@ def add_custom():
             if inp == "c":
                 return
             break
+    # generate random uuid
     erg["appid"]= str(uuid.uuid4())
     games()[erg["appid"]] = erg

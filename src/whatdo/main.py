@@ -5,16 +5,22 @@ from sys import stderr
 from whatdo import util, steam, custom
 from whatdo.util import col
 
+# all game sources available
+# for doc see template
 all_games = [steam, custom]
 
+# current choice of game selected
+# -- not yet implemented --
 current_games_choice = all_games
 
+# return all currently selected games
 def current_games() -> dict:
     erg = {}
     for i in current_games_choice:
         erg.update(i.games())
     return erg
 
+# list all currently selected games
 def list_current():
     for i in current_games().values():
         if not i.get("exclude", False)
