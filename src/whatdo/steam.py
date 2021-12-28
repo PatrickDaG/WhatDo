@@ -40,6 +40,7 @@ def online_games() -> dict:
     arr = json.loads(requests.get(req).text)["response"]["games"]
     erg = {}
     for j in arr:
+        j["type"] = "steam"
         erg[str(j["appid"])] = j
     return erg
 

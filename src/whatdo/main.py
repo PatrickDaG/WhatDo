@@ -15,6 +15,11 @@ def current_games() -> dict:
         erg.update(i.games())
     return erg
 
+def list_current():
+    for i in current_games().values():
+        print(i["type"] + ": " + i["name"])
+
+
 def print_gametime(name: str):
     try:
         time = util.playtime(name)
@@ -35,8 +40,9 @@ def main():
         print("(" + col("\x1b[32m") + "r" + col("\x1b[m") + ") to reroll, " +
             "(" + col("\x1b[33m") + "e" + col("\x1b[m") + ") to exclude, " +
             "(" + col("\x1b[31m") + "q" + col("\x1b[m") + ") to quit, " +
-            "(" + col("\x1b[35m") + "s" + col("\x1b[m") + ") to sync games with online, "
-            "(" + col("\x1b[35m") + "a" + col("\x1b[m") + ") to add custom games")
+            "(" + col("\x1b[35m") + "s" + col("\x1b[m") + ") to sync games with online, " +
+            "(" + col("\x1b[35m") + "a" + col("\x1b[m") + ") to add custom games, " +
+            "(" + col("\x1b[35m") + "l" + col("\x1b[m") + ") to list current games")
         print_gametime(cur["name"])
         inp = input(">")
         if inp == "e":
@@ -52,3 +58,5 @@ def main():
                 print("Could not sync correctly. Please confirm working connection as well as correct api key")
         elif inp == "a":
             custom.add_custom()
+        elif inp == "l":
+            list_current()

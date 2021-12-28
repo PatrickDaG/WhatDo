@@ -27,6 +27,7 @@ def save():
 def add_custom():
     erg = {}
     erg["name"] = input("Please enter a name:")
+    erg["type"] = "custom"
     erg["img_icon_url"] = input("You may enter a icon url for display purpose:")
     erg["img_logo_url"] = input("Additionally you can enter a logo url:")
     for i in games().values():
