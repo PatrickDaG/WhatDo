@@ -10,3 +10,5 @@ Just execute
 ./whatdo
 ```
 and the rest should be self explanatory.
+
+Watch out to exit properly or your state won't be saved
