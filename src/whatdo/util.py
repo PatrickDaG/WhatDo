@@ -2,6 +2,7 @@
 
 import random
 import json
+from typing import Optional
 # some util function to assist me
 
 data_folder = "./data/"
@@ -100,8 +101,11 @@ def load_games(filename: str) -> dict:
 This part is to get average playtime from HowLongToBeat
 """
 from howlongtobeatpy import HowLongToBeat, HowLongToBeatEntry
+from fake_useragent.errors import FakeUserAgentError
 
-def playtime(game_name: str) -> HowLongToBeatEntry:
+from sys import stderr
+
+def playtime(game_name: str) -> Optional[HowLongToBeatEntry]:
     """
     Get average playtime from HowLongToBeat
 
@@ -115,7 +119,12 @@ def playtime(game_name: str) -> HowLongToBeatEntry:
     HowLongToBeatEntry
         Custom class to hold information about the gametime
     """
-    res = HowLongToBeat().search(game_name)
+
+    try:
+        res = HowLongToBeat().search(game_name)
+    except FakeUserAgentError:
+        print("error getting Fake User Agent for request", file=stderr)
+        return None
     if res is None or len(res) == 0:
         # no game found
         return None

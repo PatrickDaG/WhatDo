@@ -34,6 +34,8 @@ def current_games() -> dict:
 def list_current():
     """
     List all currently selected games on stdout
+
+    Currently no ordering is guaranteed
     """
     for i in current_games().values():
         if not i.get("exclude", False):

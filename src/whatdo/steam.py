@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from typing import Optional
 import requests
 import json
 
@@ -55,21 +56,24 @@ def sync_games() -> bool:
     offline = games()
     if online is None:
         return False
-    for k,v in online_games().items():
+    if offline is None:
+        return False
+    for k,v in online.items():
         o = offline.get(k)
         if o is not None:
             v["exclude"] = o.get("exclude", False)
     cache = online
     return True
 
-def online_games() -> dict:
+def online_games() -> Optional[dict]:
     """
     Fetch games from Steam API
 
     Returns
     -------
     dict
-        dictionary from appid to json of game, None if failed
+        dictionary from appid to json of game
+        None if failed
     """
     address = "https://api.steampowered.com"
     method = "/IPlayerService/GetOwnedGames/v0001/"
@@ -81,7 +85,11 @@ def online_games() -> dict:
             }
     # add try except if no internet connection exists
     req = build_request(address, method, options)
-    arr = json.loads(requests.get(req).text)["response"]["games"]
+    try:
+        arr = json.loads(requests.get(req).text)["response"]["games"]
+    except requests.exceptions.ConnectionError:
+        print("Could not get games, Maybe check your connection", file=stderr)
+        return None
     erg = {}
     for j in arr:
         j["type"] = name
@@ -94,7 +102,7 @@ def save():
         return
     save_games(cache, file)
 
-def games() -> dict:
+def games() -> Optional[dict]:
     """ see `template.games` """
     global cache
     if cache is not None:
