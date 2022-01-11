@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+import os
 import random
 import json
+import sys
 from typing import Optional
 # some util function to assist me
 
@@ -121,7 +123,13 @@ def playtime(game_name: str) -> Optional[HowLongToBeatEntry]:
     """
 
     try:
-        res = HowLongToBeat().search(game_name)
+        # shitty library just print shit to stderr without actually
+        # throwing exception
+        old = stderr
+        with open(os.devnull, "w") as f:
+            sys.stderr = f
+            res = HowLongToBeat().search(game_name)
+        sys.stderr = old
     except FakeUserAgentError:
         print("error getting Fake User Agent for request", file=stderr)
         return None
