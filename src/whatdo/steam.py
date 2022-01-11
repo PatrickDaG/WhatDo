@@ -8,15 +8,48 @@ from sys import stderr
 from whatdo.util import build_request, load_games, save_games
 
 cache = None
+""" see `template.cache` """
+
 name = "steam"
+""" see `template.name` """
+
 file = name + ".json"
+""" see `template.file` """
+
 key_file = ".api_key"
+"""
+file in which steam api key is saved
+DO NOT COMMIT
+"""
 
 def api_key(filename: str) -> str:
+    """
+    return api key as string
+
+    Parameters
+    ----------
+    filename
+        File relative to current directory from which to read key
+
+    Returns
+    -------
+    str
+        API key as string
+    """
+
     with open(filename, 'r') as f:
         return f.read().strip()
 
 def sync_games() -> bool:
+    """
+    Sync downloaded games with games from official api
+
+    Returns
+    -------
+    bool
+        Whether it succeeded in updating, does not tell if it actually changed anything
+    """
+
     global cache
     online = online_games()
     offline = games()
@@ -30,10 +63,20 @@ def sync_games() -> bool:
     return True
 
 def online_games() -> dict:
+    """
+    Fetch games from Steam API
+
+    Returns
+    -------
+    dict
+        dictionary from appid to json of game, None if failed
+    """
     address = "https://api.steampowered.com"
     method = "/IPlayerService/GetOwnedGames/v0001/"
-    options = { "key": api_key(key_file), # should try not to publish this thx
-            "steamid": "76561198060162001", # has to be 64 id, maybe add function to map from custom id to that
+    options = { "key": api_key(key_file),
+            "steamid": "76561198060162001",
+            # has to be 64 id, maybe add function to map from custom id to that
+            # also should not be hardcoded
             "include_appinfo": "true"
             }
     # add try except if no internet connection exists
@@ -45,20 +88,19 @@ def online_games() -> dict:
         erg[str(j["appid"])] = j
     return erg
 
-def offline_games() -> dict:
-    return load_games(file)
-
 def save():
+    """ see `template.save` """
     if cache is None:
         return
     save_games(cache, file)
 
 def games() -> dict:
+    """ see `template.games` """
     global cache
     if cache is not None:
         return cache
     try:
-        cache = offline_games()
+        cache = load_games(file)
         return cache
     except FileNotFoundError:
         print("No local file found, downloading from api", file=stderr)

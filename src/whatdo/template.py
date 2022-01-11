@@ -1,37 +1,52 @@
 #!/usr/bin/env python3
+"""
+ File for additional game sources
+ While primarily intended for games it can also be used for any number
+ of other things for example tasks, todos or chores
 
-# File for additional game sources
-# While primarily intended for games it can also be used for any number of other things
-#
-# These kind of represent classes in that they each have their own json representation
-# These should include values for:
-# "name"
-# "appid"
-# "type": the type of game, in most cases equal to the name of the file which handles it
-# Additionally you can include
-# "img_icon_url"
-# "img_logo_url"
-# As links tho pictures
-# -- Not yet implemented --
+ These kind of substitute for classes in that they each have their
+ own json representation and values
+ these have to include values for:
+ "name"
+ "appid"
+ "type": the type of game, in most cases equal to the source or game launcher
+ Additionally you can include
+ "img_icon_url"
+ "img_logo_url"
+ As links to pictures
+ -- Not yet implemented --
 
-# The games of this file should then be a dict from app id to the game itself
+ This template lacks any function to add new entrys
+ which is very dependend on what kind of game you implement
+"""
 
 from whatdo.util import load_games, save_games
 
-# cached games to prevent having to load/save games every single time
 cache = None
+"""
+Cached games for faster access
+While not necessary usage is heavily encouraged to prevent ecessive load times
+"""
 
-# name of this type of game
-# To be used in type and if asking for the name of this game importer
 name = "template"
+""" Name of importer, to be able to include in menus """
 
-# file where json is to be saved/loaded from
-# will be located in data folder
 file = name + ".json"
+""" filename of save file, should end in .json """
 
-# this function should return all currenly available games, without caring about excluded or other tags
-# the usage of cache is not mandatory but heavily encouraged
+
 def games() -> dict:
+    """
+    Return all currently available games
+
+    Prints error to stderr on no games existing
+
+    Returns
+    -------
+    dict
+        dictionary from game uuid to json of game object
+        None if failed to get any games
+    """
     global cache
     if cache is not None:
         return cache
@@ -42,12 +57,11 @@ def games() -> dict:
         cache = {}
     return cache
 
-# function to save all games in json format to disk
 def save():
+    """
+    Saves current games to disk
+    """
     if cache is None:
         return
     save_games(cache, file)
 
-# This template lacks any function to add new entrys
-# This is very dependend on what kind of game you implement
-# and should be done then

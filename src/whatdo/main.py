@@ -5,29 +5,53 @@ from sys import stderr
 from whatdo import util, steam, custom
 from whatdo.util import col
 
-# all game sources available
-# for doc see template
 all_games = [steam, custom]
+"""
+All game sources currently available
+"""
 
-# current choice of game selected
-# -- not yet implemented --
 current_games_choice = all_games
+"""
+Currentry selected choice
+Must be subset of all_games
+---- NOT YET IMPLEMENTED ----
+"""
 
-# return all currently selected games
 def current_games() -> dict:
+    """
+    joined dict of all game sources
+
+    Returns
+    -------
+    dict
+        dict from appid to game of all games
+    """
     erg = {}
     for i in current_games_choice:
         erg.update(i.games())
     return erg
 
-# list all currently selected games
 def list_current():
+    """
+    List all currently selected games on stdout
+    """
     for i in current_games().values():
-        if not i.get("exclude", False)
+        if not i.get("exclude", False):
             print(i["type"] + ": " + i["name"])
 
 
 def print_gametime(name: str):
+    """
+    Print average gametime on stdout
+
+    Print errors on stderr if no game found
+
+    Parameters
+    ----------
+    name
+        game name to search for
+    """
+
     try:
         time = util.playtime(name)
         if time is None:
@@ -41,6 +65,9 @@ def print_gametime(name: str):
 
 
 def main():
+    """
+    main loop for command line interface
+    """
     while True:
         cur = util.choose_random(list(current_games().values()))
         print("Current Game is: " + col("\x1b[34m") + cur["name"] + col("\x1b[m"))
