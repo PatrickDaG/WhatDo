@@ -21,6 +21,11 @@ key_file = ".api_key"
 """
 file in which steam api key is saved
 DO NOT COMMIT
+"""           
+
+steamid_file = ".steamid"
+"""
+file which holds my steam id
 """
 
 def api_key(filename: str) -> str:
@@ -78,9 +83,7 @@ def online_games() -> Optional[dict]:
     address = "https://api.steampowered.com"
     method = "/IPlayerService/GetOwnedGames/v0001/"
     options = { "key": api_key(key_file),
-            "steamid": "76561198060162001",
-            # has to be 64 id, maybe add function to map from custom id to that
-            # also should not be hardcoded
+            "steamid": steam_id(),
             "include_appinfo": "true"
             }
     # add try except if no internet connection exists
@@ -95,6 +98,27 @@ def online_games() -> Optional[dict]:
         j["type"] = name
         erg[str(j["appid"])] = j
     return erg
+
+def steam_id() -> str:
+    """
+    Get my steam64 id
+
+    Prompt for input if none currently available
+    has to be steam64 id for now
+
+    Returns
+    -------
+    str
+        steam64 id
+    """
+    try:
+        with open(steamid_file, "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        erg = input("No Steamid found please input yours:")
+        with open(steamid_file, "w") as f:
+            f.write(erg)
+        return erg
 
 def save():
     """ see `template.save` """
