@@ -5,6 +5,8 @@ from sys import stderr
 from whatdo import util, steam, custom
 from whatdo.util import col, FigletText
 
+from rich.text import Text
+
 all_games = [steam, custom]
 """
 All game sources currently available
@@ -42,7 +44,7 @@ def list_current():
             print(i["type"] + ": " + i["name"])
 
 
-def print_gametime(name: str):
+def print_gametime(name: str) -> Text:
     """
     Print average gametime on stdout
 
@@ -52,18 +54,50 @@ def print_gametime(name: str):
     ----------
     name
         game name to search for
+
+    Returns
+    -------
+    Text
+        rich.text object of pretty output game time
     """
 
     try:
         time = util.playtime(name)
         if time is None:
-            print("No corresponding game found!", file = stderr)
-            return
-        print("Playtime: " + col("\x1b[35m") + time.gameplay_main + col("\x1b[m") +
-            " " + time.gameplay_main_unit + " for Game: "
-            + col("\x1b[33m")+ time.game_name + col("\x1b[m"))
+            return Text()
+        return Text.from_markup(f"Time to beat: [yellow]{time.gameplay_main} {time.gameplay_main_unit}[/yellow] for Game: " +
+            f"[green]{time.game_name}[/green]")
     except TypeError:
-        print("No Gametime found", file = stderr)
+        return Text()
+
+def print_extra(game: dict, gametime:bool = False) -> Text:
+    """
+    Print the extra game information
+
+    Parameters
+    ----------
+    game
+        the game information to print
+    gametime
+        whether or not to fetch the gametime
+
+    Returns
+    -------
+    Text
+        The renderable text object
+    """
+    str = f"[purple]name:[/purple]\t\t{game['name']}\n"
+    str += f"[purple]appid:[/purple]\t\t{game['appid']}\n"
+
+    g = game.get("playtime_forever")
+    if g is not None:
+        str += f"[purple]playtime:[/purple]\t{g} minutes\n"
+    str += f"[purple]type[/purple]\t\t{game['type']}\n"
+    erg = Text.from_markup(str)
+    if gametime:
+        erg.append(print_gametime(game["name"]))
+    return erg
+
 
 menu = ("(" + col("\x1b[32m") + "r" + col("\x1b[0m") + ") to reroll\n" +
         "(" + col("\x1b[33m") + "e" + col("\x1b[0m") + ") to exclude\n" +
@@ -71,40 +105,17 @@ menu = ("(" + col("\x1b[32m") + "r" + col("\x1b[0m") + ") to reroll\n" +
         "(" + col("\x1b[35m") + "s" + col("\x1b[0m") + ") to sync games with online\n" +
         "(" + col("\x1b[35m") + "a" + col("\x1b[0m") + ") to add custom games\n" +
         "(" + col("\x1b[35m") + "l" + col("\x1b[0m") + ") to list current games\n")
-
-def cli():
-    """
-    main loop for command line interface
-    """
-    while True:
-        cur = util.choose_random(list(current_games().values()))
-        print("Current Game is: " + col("\x1b[34m") + cur["name"] + col("\x1b[m"))
-        print(menu)
-        print_gametime(cur["name"])
-        inp = input(">")
-        if inp == "e":
-            cur["exclude"] = True
-        elif inp == "q":
-            for i in all_games:
-                i.save()
-            exit(0)
-        elif inp == "s":
-            if steam.sync_games():
-                print("Successfully synced")
-            else:
-                print("Could not sync correctly. Please confirm working connection as well as correct api key")
-        elif inp == "a":
-            custom.add_custom()
-        elif inp == "l":
-            list_current()
-
+"""
+The available keybinds
+Should be rewritten for rich without ansi codes
+"""
 
 from textual.app import App
 from textual.widgets import Static
-from rich.text import Text
 from rich.panel import Panel
 from rich.align import Align
-from rich.pretty import Pretty
+
+import asyncio
 
 class TUI(App):
 
@@ -119,6 +130,7 @@ class TUI(App):
     async def on_mount(self) -> None:
         await self.bind_keys()
 
+        self.taskreroll = None
         self.game_title = Static(Text())
         self.extra = Static(Text())
 
@@ -133,11 +145,18 @@ class TUI(App):
 
         await self.view.dock(self.extra, edge = "bottom")
 
-    async def action_reroll(self) -> None:
+    async def interuptible_reroll(self) -> None:
         self.current = util.choose_random(list(current_games().values()))
 
-        await self.extra.update(Panel(Pretty(self.current), title = "Game", border_style = "green"))
-        await self.game_title.update(Align(FigletText(self.current["name"]), "center"))
+        await self.game_title.update(Align(FigletText(self.current["name"]), "center", vertical = "middle"))
+        await self.extra.update(Panel(print_extra(self.current), title = "Game", border_style = "red"))
+        self.refresh()
+        await self.extra.update(Panel(print_extra(self.current, gametime = True), title = "Game", border_style = "green"))
+
+    async def action_reroll(self) -> None:
+        if self.taskreroll is not None:
+            self.taskreroll.cancel()
+        self.taskreroll = asyncio.ensure_future(self.interuptible_reroll())
 
     async def action_exclude(self) -> None:
         self.current["exclude"] = True
