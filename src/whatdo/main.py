@@ -3,10 +3,8 @@
 from asyncio.futures import Future
 from sys import stderr
 
-from textual.reactive import Reactive
-
-from whatdo import util, steam, custom
-from whatdo.util import col, FigletText
+from whatdo import util, steam, custom, interface
+from whatdo.util import col
 
 from rich.text import Text
 
@@ -103,6 +101,14 @@ def print_extra(game: dict, gametime:bool = False) -> Text:
         erg.append(print_gametime(game["name"]))
     return erg
 
+from rich.live import Live
+import time
+
+def main():
+    cur = util.choose_random(list(current_games().values()))
+    with Live(interface.MainView(cur), screen = True) as live:
+        time.sleep(10)
+        
 
 menu = ("(" + col("\x1b[32m") + "r" + col("\x1b[0m") + ") to reroll\n" +
         "(" + col("\x1b[33m") + "e" + col("\x1b[0m") + ") to exclude\n" +
@@ -115,98 +121,90 @@ The available keybinds
 Should be rewritten for rich without ansi codes
 """
 
-from textual.app import App
-from textual.widgets import Static
-from rich.panel import Panel
-from rich.align import Align
-from textual.widgets import ScrollView
-
-from textual.widgets import Placeholder
-
 import asyncio
 
-class TUI(App):
-
-    current = Reactive({})
-    """
-    Unused Should use this to automatically rerender the views on game change
-    """
-
-    async def bind_keys(self) -> None:
-        await self.bind("r", "reroll")
-        await self.bind("e", "exclude")
-        await self.bind("q", "quit")
-        await self.bind("s", "sync")
-        await self.bind("a", "add_custom")
-        await self.bind("l", "list")
-
-    async def on_load(self) -> None:
-        await self.bind_keys()
-
-    async def on_mount(self) -> None:
-
-        self.taskreroll = Future()
-        self.game_title = Static(Text())
-        self.extra = Static(Text())
-
-        await self.action_reroll()
-
-        await self.view.dock(self.game_title, edge = "top", size = 20)
-
-        layout_keys = Panel(Text.from_ansi(menu), title = "Keybinds", border_style = "blue")
-        keys = Static(layout_keys, name = "Keybinds")
-
-        await self.view.dock(keys, edge = "right", size = 40)
-
-        await self.view.dock(self.extra, edge = "bottom")
-
-    async def interuptible_reroll(self) -> None:
-        self.current = util.choose_random(list(current_games().values()))
-
-        await self.game_title.update(Align(FigletText(self.current["name"]), "left", vertical = "middle"))
-        await self.extra.update(Panel(print_extra(self.current), title = "Game", border_style = "red"))
-        self.refresh()
-        await self.extra.update(Panel(print_extra(self.current, gametime = True), title = "Game", border_style = "green"))
-
-    async def action_reroll(self) -> None:
-        if not self.taskreroll.done():
-            self.taskreroll.cancel()
-        self.taskreroll = asyncio.ensure_future(self.interuptible_reroll())
-
-    async def action_exclude(self) -> None:
-        self.current["exclude"] = True
-        await self.action_reroll()
-
-    async def action_quit(self) -> None:
-        for i in all_games:
-            i.save()
-        return await super().action_quit()
-
-    async def action_sync(self) -> None:
-        """
-        Not fully working
-        """
-        await self.game_title.update(Text("Syncing ..."))
-        if steam.sync_games():
-            lol = Static(Align(Panel(Text("Sync successfull!!"), width = 100, height = 3, border_style = "green"), align = "center", vertical = "middle"))
-            await self.view.dock(lol, z= 1)
-        else:
-            await self.view.dock(Static(Align(Panel(Text("Could not sync correctly"), width = 100, height = 3, border_style = "red"), align = "center", vertical = "middle")), z = 1)
-        self.view.widgets.remove(lol)
-
-    async def action_list(self) -> None:
-        """
-        Renders scrollable popup with List of all games
-        """
-        gamelist = Text()
-        for i in current_games().values():
-            gamelist.append(Text.from_markup(f"[purple]{i['type']}:[/purple] {i['name']}"))
-            if i.get('exclude'):
-                gamelist.append(Text.from_markup(f"[red](excluded)[/red]"))
-            gamelist.append("\n")
-        view = ScrollView(gamelist, auto_width = False, gutter = 5)
-        await self.view.dock(view, edge = "top", z = 1)
-
-def tui():
-    TUI.run()
-
+#class TUI(App):
+#
+#    current = Reactive({})
+#    """
+#    Unused Should use this to automatically rerender the views on game change
+#    """
+#
+#    async def bind_keys(self) -> None:
+#        await self.bind("r", "reroll")
+#        await self.bind("e", "exclude")
+#        await self.bind("q", "quit")
+#        await self.bind("s", "sync")
+#        await self.bind("a", "add_custom")
+#        await self.bind("l", "list")
+#
+#    async def on_load(self) -> None:
+#        await self.bind_keys()
+#
+#    async def on_mount(self) -> None:
+#
+#        self.taskreroll = Future()
+#        self.game_title = Static(Text())
+#        self.extra = Static(Text())
+#
+#        await self.action_reroll()
+#
+#        await self.view.dock(self.game_title, edge = "top", size = 20)
+#
+#        layout_keys = Panel(Text.from_ansi(menu), title = "Keybinds", border_style = "blue")
+#        keys = Static(layout_keys, name = "Keybinds")
+#
+#        await self.view.dock(keys, edge = "right", size = 40)
+#
+#        await self.view.dock(self.extra, edge = "bottom")
+#
+#    async def interuptible_reroll(self) -> None:
+#        self.current = util.choose_random(list(current_games().values()))
+#
+#        await self.game_title.update(Align(FigletText(self.current["name"]), "left", vertical = "middle"))
+#        await self.extra.update(Panel(print_extra(self.current), title = "Game", border_style = "red"))
+#        self.refresh()
+#        await self.extra.update(Panel(print_extra(self.current, gametime = True), title = "Game", border_style = "green"))
+#
+#    async def action_reroll(self) -> None:
+#        if not self.taskreroll.done():
+#            self.taskreroll.cancel()
+#        self.taskreroll = asyncio.ensure_future(self.interuptible_reroll())
+#
+#    async def action_exclude(self) -> None:
+#        self.current["exclude"] = True
+#        await self.action_reroll()
+#
+#    async def action_quit(self) -> None:
+#        for i in all_games:
+#            i.save()
+#        return await super().action_quit()
+#
+#    async def action_sync(self) -> None:
+#        """
+#        Not fully working
+#        """
+#        await self.game_title.update(Text("Syncing ..."))
+#        if steam.sync_games():
+#            lol = Static(Align(Panel(Text("Sync successfull!!"), width = 100, height = 3, border_style = "green"), align = "center", vertical = "middle"))
+#            await self.view.dock(lol, z= 1)
+#        else:
+#            await self.view.dock(Static(Align(Panel(Text("Could not sync correctly"), width = 100, height = 3, border_style = "red"), align = "center", vertical = "middle")), z = 1)
+#        self.view.widgets.remove(lol)
+#
+#    async def action_list(self) -> None:
+#        """
+#        Renders scrollable popup with List of all games
+#        """
+#        gamelist = Text()
+#        for i in current_games().values():
+#            gamelist.append(Text.from_markup(f"[purple]{i['type']}:[/purple] {i['name']}"))
+#            if i.get('exclude'):
+#                gamelist.append(Text.from_markup(f"[red](excluded)[/red]"))
+#            gamelist.append("\n")
+#        view = ScrollView(gamelist, auto_width = False, gutter = 5)
+#        await self.view.dock(view, edge = "top", z = 1)
+#
+#def tui():
+#    TUI.run()
+#

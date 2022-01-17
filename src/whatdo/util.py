@@ -99,35 +99,6 @@ def load_games(filename: str) -> dict:
     with open(data_folder + filename, "r") as f:
         return json.load(f)
 
-from pyfiglet import Figlet
-from rich.text import Text
-from rich.console import Console, ConsoleOptions, RenderResult
-
-class FigletText:
-    """A renderable to generate figlet text that adapts to fit the container."""
-
-    def __init__(self, text: str) -> None:
-        self.text = text
-
-    def __rich_console__(
-        self, console: Console, options: ConsoleOptions
-    ) -> RenderResult:
-        """Build a Rich renderable to render the Figlet text."""
-        size = min(options.max_width / 2, options.max_height)
-        if size < 4:
-            yield Text(self.text, style="bold")
-        else:
-            if size < 7:
-                font_name = "mini"
-            elif size < 8:
-                font_name = "small"
-            elif size < 10:
-                font_name = "standard"
-            else:
-                font_name = "big"
-            font = Figlet(font=font_name, width=options.max_width, justify = "center")
-            yield Text(font.renderText(self.text), style="bold")
-
 """
 This part is to get average playtime from HowLongToBeat
 """
