@@ -125,8 +125,8 @@ class FigletText:
                 font_name = "standard"
             else:
                 font_name = "big"
-            font = Figlet(font=font_name, width=options.max_width)
-            yield Text(font.renderText(self.text).rstrip("\n"), style="bold")
+            font = Figlet(font=font_name, width=options.max_width, justify = "center")
+            yield Text(font.renderText(self.text), style="bold")
 
 """
 This part is to get average playtime from HowLongToBeat

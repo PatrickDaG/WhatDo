@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
+from asyncio.futures import Future
 from sys import stderr
+
+from textual.reactive import Reactive
 
 from whatdo import util, steam, custom
 from whatdo.util import col, FigletText
@@ -61,14 +64,16 @@ def print_gametime(name: str) -> Text:
         rich.text object of pretty output game time
     """
 
+    time = util.playtime(name)
     try:
-        time = util.playtime(name)
-        if time is None:
+        if time is None or int(time.gameplay_main) < 0:
             return Text()
-        return Text.from_markup(f"Time to beat: [yellow]{time.gameplay_main} {time.gameplay_main_unit}[/yellow] for Game: " +
-            f"[green]{time.game_name}[/green]")
     except TypeError:
         return Text()
+    except ValueError:
+        pass
+    return Text.from_markup(f"Time to beat: [yellow]{time.gameplay_main} {time.gameplay_main_unit}[/yellow] for Game: " +
+        f"[green]{time.game_name}[/green]")
 
 def print_extra(game: dict, gametime:bool = False) -> Text:
     """
@@ -114,10 +119,18 @@ from textual.app import App
 from textual.widgets import Static
 from rich.panel import Panel
 from rich.align import Align
+from textual.widgets import ScrollView
+
+from textual.widgets import Placeholder
 
 import asyncio
 
 class TUI(App):
+
+    current = Reactive({})
+    """
+    Unused Should use this to automatically rerender the views on game change
+    """
 
     async def bind_keys(self) -> None:
         await self.bind("r", "reroll")
@@ -127,10 +140,12 @@ class TUI(App):
         await self.bind("a", "add_custom")
         await self.bind("l", "list")
 
-    async def on_mount(self) -> None:
+    async def on_load(self) -> None:
         await self.bind_keys()
 
-        self.taskreroll = None
+    async def on_mount(self) -> None:
+
+        self.taskreroll = Future()
         self.game_title = Static(Text())
         self.extra = Static(Text())
 
@@ -141,20 +156,20 @@ class TUI(App):
         layout_keys = Panel(Text.from_ansi(menu), title = "Keybinds", border_style = "blue")
         keys = Static(layout_keys, name = "Keybinds")
 
-        await self.view.dock(keys, edge = "right", size = 50)
+        await self.view.dock(keys, edge = "right", size = 40)
 
         await self.view.dock(self.extra, edge = "bottom")
 
     async def interuptible_reroll(self) -> None:
         self.current = util.choose_random(list(current_games().values()))
 
-        await self.game_title.update(Align(FigletText(self.current["name"]), "center", vertical = "middle"))
+        await self.game_title.update(Align(FigletText(self.current["name"]), "left", vertical = "middle"))
         await self.extra.update(Panel(print_extra(self.current), title = "Game", border_style = "red"))
         self.refresh()
         await self.extra.update(Panel(print_extra(self.current, gametime = True), title = "Game", border_style = "green"))
 
     async def action_reroll(self) -> None:
-        if self.taskreroll is not None:
+        if not self.taskreroll.done():
             self.taskreroll.cancel()
         self.taskreroll = asyncio.ensure_future(self.interuptible_reroll())
 
@@ -173,12 +188,24 @@ class TUI(App):
         """
         await self.game_title.update(Text("Syncing ..."))
         if steam.sync_games():
-            await self.game_title.update(Text("Successfully synced"))
+            lol = Static(Align(Panel(Text("Sync successfull!!"), width = 100, height = 3, border_style = "green"), align = "center", vertical = "middle"))
+            await self.view.dock(lol, z= 1)
         else:
-            await self.game_title.update(Text("Could not sync correctly. Please confirm working connection as well as correct api key"))
-            await self.action_quit()
-        await self.action_reroll()
+            await self.view.dock(Static(Align(Panel(Text("Could not sync correctly"), width = 100, height = 3, border_style = "red"), align = "center", vertical = "middle")), z = 1)
+        self.view.widgets.remove(lol)
 
+    async def action_list(self) -> None:
+        """
+        Renders scrollable popup with List of all games
+        """
+        gamelist = Text()
+        for i in current_games().values():
+            gamelist.append(Text.from_markup(f"[purple]{i['type']}:[/purple] {i['name']}"))
+            if i.get('exclude'):
+                gamelist.append(Text.from_markup(f"[red](excluded)[/red]"))
+            gamelist.append("\n")
+        view = ScrollView(gamelist, auto_width = False, gutter = 5)
+        await self.view.dock(view, edge = "top", z = 1)
 
 def tui():
     TUI.run()
