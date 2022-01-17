@@ -99,6 +99,23 @@ def load_games(filename: str) -> dict:
     with open(data_folder + filename, "r") as f:
         return json.load(f)
 
+def getch():
+    """
+    get single character unbuffered
+    """
+    import termios
+    import sys, tty
+    def linux_getch():
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setcbreak(fd)
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+    return linux_getch()
+
 """
 This part is to get average playtime from HowLongToBeat
 """
