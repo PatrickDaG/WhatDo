@@ -6,8 +6,10 @@ from pyfiglet import Figlet
 from rich.text import Text
 from rich.console import Console, ConsoleOptions, RenderResult
 from rich.layout import Layout
+from rich.panel import Panel
 
 from whatdo import util
+import whatdo.state as state
 
 class FigletText:
     """A renderable to generate figlet text that adapts to fit the container."""
@@ -35,7 +37,6 @@ class FigletText:
             font = Figlet(font=font_name, width=options.max_width, justify = self.justify)
             yield Text(font.renderText(self.text), style="bold")
 
-from rich.panel import Panel
 menu = Panel(Text.from_markup(
     """
     ([green]r[/green]) to reroll\n
@@ -53,26 +54,23 @@ Should be rewritten for rich without ansi codes
 """
 class GameInfo:
 
-    def __init__(self, game: dict):
-        self.game = game
-
     def __rich_console__(
             self, console: Console, options: ConsoleOptions
     ) ->RenderResult:
-        str = f"[purple]name:[/purple]\t\t{self.game['name']}\n"
-        str += f"[purple]appid:[/purple]\t\t{self.game['appid']}\n"
+        str = f"[purple]name:[/purple]\t\t{state.current_game['name']}\n"
+        str += f"[purple]appid:[/purple]\t\t{state.current_game['appid']}\n"
 
-        g = self.game.get("playtime_forever")
+        g = state.current_game.get("playtime_forever")
         if g is not None:
             str += f"[purple]playtime:[/purple]\t{g} minutes\n"
-        str += f"[purple]type[/purple]\t\t{self.game['type']}\n"
+        str += f"[purple]type[/purple]\t\t{state.current_game['type']}\n"
         erg = Text.from_markup(str)
         erg.append(self.print_gametime())
         erg = Panel(erg, title = "Game", border_style = "green")
         yield erg
 
     def print_gametime(self) -> Text:
-        time = util.playtime(self.game["name"])
+        time = util.playtime(state.current_game["name"])
         try:
             if time is None or int(time.gameplay_main) < 0:
                 return Text()
@@ -86,16 +84,14 @@ class GameInfo:
 
 class MainView:
 
-    def __init__(self, game: dict):
-        self.game = game
-        self.title = FigletText(text = self.game["name"])
-        self.game_info = GameInfo(game)
+    def __init__(self):
+        self.title = FigletText("")
+        self.game_info = GameInfo()
 
     def __rich_console__(
             self, console: Console, options: ConsoleOptions
     ) ->RenderResult:
-        self.title.text = self.game["name"]
-        self.game_info.game = self.game
+        self.title.text = state.current_game["name"]
         erg = Layout()
         erg.split_column(
                 Layout(self.title, name = "title", minimum_size = 8),

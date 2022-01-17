@@ -3,7 +3,7 @@
 import uuid
 from sys import stderr
 
-from whatdo.util import load_games, save_games, col
+from whatdo.util import load_games, save_games
 
 cache = None
 """ see `template.cache` """
@@ -51,9 +51,9 @@ def add_custom():
         if i["name"] == erg["name"]:
             print("There seems to already exist a game with that name!")
             print("Do you want to: "
-                    + col("\x1b[31m") + "o" + col("\x1b[m") + "verwrite, "
-                    + col("\x1b[31m") + "a" + col("\x1b[m") + "dd anyway or "
-                    + col("\x1b[31m") + "c" + col("\x1b[m") + "cancel?")
+                    + "o" + "verwrite, "
+                    + "a" + "dd anyway or "
+                    + "c" + "cancel?")
             inp = input(">")
             if inp == "o":
                 erg["appid"] = i["appid"]

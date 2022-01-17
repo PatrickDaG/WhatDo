@@ -51,23 +51,6 @@ def choose_random(choices: list[dict]) -> dict:
     return random.choice([c for c in choices if
         not c.get("exclude", False)])
 
-def col(color: str) -> str: # wen ich fancy sein will can hier auf color support getestet werden
-    """
-    for color output in print
-
-    Parameters
-    ----------
-    color
-        Escape sequence for term color
-
-    Returns
-    -------
-    str
-        the same escape sequence if color is supported, else empty
-        ----- NOT YET IMPLEMENTED -----
-    """
-    return color
-
 def save_games(games: dict, filename: str):
     """
     Save games to file

@@ -2,9 +2,15 @@
 
 import time
 
+from rich.live import Live
+from rich.console import Console
 from rich.text import Text
-from whatdo import util, steam, custom, interface
+
+from whatdo import util, steam, custom
+from whatdo.interface import MainView
 from whatdo.util import getch
+
+import whatdo.state as state
 
 all_games = [steam, custom]
 """
@@ -32,27 +38,12 @@ def current_games() -> dict:
         erg.update(i.games())
     return erg
 
-def list_current():
-    """
-    List all currently selected games on stdout
-
-    Currently no ordering is guaranteed
-    """
-    for i in current_games().values():
-        if not i.get("exclude", False):
-            print(i["type"] + ": " + i["name"])
-
-from rich.live import Live
-from rich.console import Console
-
 def main():
-    cur = util.choose_random(list(current_games().values()))
-    main_view = interface.MainView(cur)
     console = Console()
 
     def reroll():
-        cur = util.choose_random(list(current_games().values()))
-        main_view.game = cur
+        state.current_game = util.choose_random(list(current_games().values()))
+    reroll()
 
     def quit():
         for i in all_games:
@@ -60,8 +51,9 @@ def main():
         exit(0)
 
     def exclude():
-        cur["exclude"] = True
+        state.current_game["exclude"] = True
         reroll()
+
     def sync():
         with console.status("Syncing") as status:
             if steam.sync_games():
@@ -82,8 +74,10 @@ def main():
         with console.pager(styles = True):
             console.print(gamelist)
 
+    def add():
+        return custom.add_custom()
 
-    with Live(main_view, screen = True, refresh_per_second = 12) as live:
+    with Live(MainView(), screen = True, refresh_per_second = 12) as live:
         while True:
             inp = getch()
             if inp == "r":
@@ -99,4 +93,8 @@ def main():
             if inp == "l":
                 live.stop()
                 _list()
+                live.start()
+            if inp == "a":
+                live.stop()
+                add()
                 live.start()
